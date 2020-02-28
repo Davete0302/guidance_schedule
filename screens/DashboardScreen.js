@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableNativeFeedback, ImageBackground, FlatList, RefreshControl, Switch,Alert } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import { ScrollView } from 'react-native-gesture-handler';
+import moment from "moment";
 import AsyncStorage from '@react-native-community/async-storage';
 import { ListOfTransactions, ListOfTransactionsPagination } from '../actions/Transactions';
 import { connect } from 'react-redux';
@@ -89,7 +89,7 @@ class NotificationScreen extends React.Component {
         }
     }
 
-    Navigate = async (RouteTo, HeaderTitle, id,type) => {
+    Navigate = async (RouteTo, HeaderTitle, id,type,date) => {
         let header = HeaderTitle.replace(/"/g, '');
         if(id==0){
             Alert.alert(
@@ -103,7 +103,7 @@ class NotificationScreen extends React.Component {
         }else if(type=='Consultation'){
             Alert.alert(
                 'Alert',
-                'Exam not available.',
+                'Not available.',
                 [
                     { text: 'OK' },
                 ],
@@ -114,6 +114,16 @@ class NotificationScreen extends React.Component {
             Alert.alert(
                 'Alert',
                 'Exam already taken.',
+                [
+                    { text: 'OK' },
+                ],
+                { cancelable: false }
+            )
+        }
+        else if(date!=moment(new Date()).format("YYYY-MM-DD")){
+            Alert.alert(
+                'Alert',
+                'Unable to take exam. Examination date on '+ moment(date).format("MMMM DD YYYY"),
                 [
                     { text: 'OK' },
                 ],
@@ -162,7 +172,7 @@ class NotificationScreen extends React.Component {
         return (
             //to be converted to array 
             <View style={styles.container}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', paddingLeft: 20, paddingTop: 20, paddingBottom: 10 }}>List of Exams</Text>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', paddingLeft: 20, paddingTop: 20, paddingBottom: 10 }}>List of Schedules</Text>
 
                 <LoadingOverlay visible={listLoading}/>
 
@@ -172,12 +182,12 @@ class NotificationScreen extends React.Component {
                         numColumns={1}
                         data={job_order_list}
                         renderItem={({ item }) =>
-                            <TouchableNativeFeedback onPress={() => this.Navigate('DetailsJob', 'Exam',item.isConfirmed,item.schedule_type)} accessible={false}>
+                            <TouchableNativeFeedback onPress={() => this.Navigate('DetailsJob', 'Exam',item.isConfirmed,item.schedule_type,item.start_date)} accessible={false}>
                                 <View style={styles.Card}>
                                     <View style={{ marginLeft: 20, marginRight: 20, marginBottom: 10 }}>
                                         <Text style={styles.headline}>{item.schedule_type}</Text>
                                         <View style={{ flexDirection: 'row' }}>
-                                            <Text style={{ fontSize: 12, marginRight: 3 }}>Guidance and Testing</Text>
+                                            <Text style={{ fontSize: 12, marginRight: 3 }}>{item.type}</Text>
                                             <FontAwesome name='angle-right' size={20} style={{ marginLeft: 'auto' }} />
                                         </View>
                                         <View style={{ flexDirection: 'row' }}>

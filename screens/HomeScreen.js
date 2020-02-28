@@ -1,14 +1,14 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableHighlight, Switch, ImageBackground, PermissionsAndroid, TextInput } from 'react-native';
+import { StyleSheet, TouchableHighlight, Text, View, Picker, Alert, ImageBackground, TouchableWithoutFeedback, TextInput } from 'react-native';
 import Colors from '../Constants/Colors';
+import moment from "moment";
 import { ScrollView } from 'react-native-gesture-handler';
-import { Overlay } from 'react-native-elements';
+import { Calendar } from 'react-native-calendars';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import Geolocation from '@react-native-community/geolocation';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'
-import AsyncStorage from '@react-native-community/async-storage';
+import { CreateSchedule } from '../actions/Transactions';
 import { connect } from 'react-redux';
-import { LoadingOverlay } from "../components/Indicator";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { UserLogoutAsync } from '../actions/Login';
 let pageTitle;
 
 class HomeScreen extends React.Component {
@@ -16,344 +16,379 @@ class HomeScreen extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      switchValue: true, isVisible: false, Accept: false, Receipt: false,
-      userlatitude: '7.0780', userlongitude: '125.6137',
-      location: null, latitude: '7.0499', longitude: '125.5881',
-      Type: 0, finalprice: false
+      isDateTimePickerVisible: false, isDateTimePickerVisible1: false,
+      selectedStartDate: '', disabled: true,
+      StartTime: moment(new Date(), 'hh:mm:ss'),
+      EndTime: moment(new Date(), 'hh:mm:ss'),
+      schedType: 'Referral', examType: 'Consultation',
+      refType: [
+        { label: 'Referral', value: 'Referral' },
+        { label: 'Call in', value: 'Call in' },
+        { label: 'Walk in', value: 'Walk in' }
+      ],
+      examSel: [
+        { label: 'Consultation', value: 'Consultation' },
+        { label: 'Examination - College Adjustment Scale', value: 'Examination - College Adjustment Scale' },
+        { label: 'Examination - Standard Progressive Matrices', value: 'Examination - Standard Progressive Matrices' },
+        { label: 'Examination - 16 Personality Factor Test', value: 'Examination - 16 Personality Factor Test' },
+        { label: "Examination - Beck's Depression Inventory", value: "Examination - Beck's Depression Inventory" },
+        { label: 'Examination - Filipino Work Values Scale', value: 'Examination - Filipino Work Values Scale' },
+        { label: 'Examination - IQ Test', value: 'Examination - IQ Test' },
+        { label: 'Examination - Basic Personality Inventory', value: 'Examination - Basic Personality Inventory' },
+        { label: 'Examination - BarOn Emotional Quotient Inventory', value: 'Examination - BarOn Emotinal Quotient Inventory' },
+
+      ],
     }
   }
- 
+
   componentDidMount() {
-      
+
     this.willFocusSubscription = this.props.navigation.addListener(
-        'willFocus',
-        () => {
-          this.requestAccess();
-          this._retrieveData();
-        }
+      'willFocus',
+      () => {
+        this.props.navigation.setParams({ Save: this.Logout });
+        this.setState({ EndTime: moment(this.state.StartTime).add(1, 'hours') })
+      }
     );
-}
+  }
 
-componentWillUnmount() {
+
+  componentWillUnmount() {
     this.willFocusSubscription.remove();
-}
-  _retrieveData = async () => {
-    try {
-      const value = await AsyncStorage.getItem('Type');
-      const active = await AsyncStorage.getItem('Active');
-      if (active === true || active === 'true') {
-        this.props.navigation.setParams({ handleSave: this.toggleSwitch, switchValue: true, Save: this.Logout });
-      } else {
-        this.props.navigation.setParams({ handleSave: this.toggleSwitch, switchValue: false, Save: this.Logout });
-      }
-      if (value !== null) {
-        //get user type 
-        this.setState({ Type: value })
-        this.props.navigation.setParams({ Type: value });
-      }
-    } catch (error) {
-
-    }
   }
-  toggleSwitch = async (value) => {
-    let { Type } = this.state;
-    let holder = !value;
 
-    let active = !value;
-    if (holder == true) {
-      active = 1;
-      await AsyncStorage.setItem('Active', 'true');
+  Logout = (value, response) => {
+    this.props.UserLogoutAsync(this.props.navigation);
+  }
+
+  handleDatePicked = date => {
+    let format = 'hh:mm:ss'
+    console.log(date)
+    // var time = moment() gives you current time. no format required.
+    let time = moment(date, format),
+      beforeTime = moment('07:59:00', format),
+      afterTime = moment('20:01:00', format);
+    if (time.isBetween(beforeTime, afterTime)) {
+      this.setState({
+        StartTime: date,
+      });
+
     } else {
-      active = 0;
-      await AsyncStorage.setItem('Active', 'false');
+      Alert.alert(
+        "Alert",
+        'Booking time is between 8:00 AM to 8:00 PM',
+        [
+          { text: "Ok", onPress: () => console.log("later pressed") },
+        ],
+        { cancelable: false }
+      );
     }
-    //set switch value in navigation
-    this.props.navigation.setParams({
-      switchValue: holder,
+    this.hideDateTimePicker();
+  };
+
+  showDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: true });
+  };
+  hideDateTimePicker = () => {
+    this.setState({ isDateTimePickerVisible: false });
+  };
+
+  handleDatePicked1 = date => {
+    let format = 'hh:mm:ss'
+    // var time = moment() gives you current time. no format required.
+    let time = moment(date, format),
+      beforeTime = moment('07:59:00', format),
+      afterTime = moment('20:01:00', format);
+    if (time.isBetween(beforeTime, afterTime)) {
+      this.setState({
+        EndTime: date,
+      });
+
+    } else {
+      Alert.alert(
+        "Alert",
+        'Booking time is between 8:00 AM to 8:00 PM',
+        [
+          { text: "Ok", onPress: () => console.log("later pressed") },
+        ],
+        { cancelable: false }
+      );
+    }
+    this.hideDateTimePicker1();
+  };
+
+  showDateTimePicker1 = () => {
+    this.setState({ isDateTimePickerVisible1: true });
+  };
+  hideDateTimePicker1 = () => {
+    this.setState({ isDateTimePickerVisible1: false });
+  };
+
+
+  onDateChange(date) {
+    this.setState({
+      selectedStartDate: date
     });
-    //set switch value in state
-    this.setState({ switchValue: holder })
-    if (Type == 2) {
-      //hide overlay if user type is provider
-      this.setState({ isVisible: false })
-    } else {
-      this.setState({ isVisible: holder })
-    }
   }
 
-  Navigate(RouteTo, HeaderTitle) {
-
-    let header = HeaderTitle.replace(/"/g, '');
-    this.props.navigation.navigate(RouteTo, { title: header });
-
-  }
-
-  requestAccess = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          'title': 'Location permission',
-          'message': 'App needs access to your location ' +
-            'so we can show your location.'
-        }
-      )
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        Geolocation.getCurrentPosition(
-          (position) => {
-            const location = JSON.stringify(position);
-
-            this.setState({ location });
-            this.setState({ userlatitude: position.coords.latitude });
-            this.setState({ userlongitude: position.coords.longitude });
-          },
-          (error) => this.setState({ error: error.message }),
-          { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 },
-        );
-
-      } else {
-        console.log("Location permission denied")
-      }
-    } catch (err) {
-      console.warn(err)
-    }
-  }
-  render() {
-    const { navigation } = this.props;
-    const { isVisible, Accept, latitude, longitude, Receipt, userlatitude, userlongitude, finalprice } = this.state;
-    pageTitle = JSON.stringify(navigation.getParam('title', 'default value'));
-    let Texts = 'Item in Shop';
-    let Service = JSON.stringify(navigation.getParam('Service', 'default value'));
-    const serv = Service.replace(/"/g, '');
-    const { isLoading } = this.props;
+  renderPicker() {
+    let itemsource = this.state.refType.map((item, i) => <Picker.Item key={i} label={item.label} value={item.value} />);
     return (
-
-      <View style={{ flex: 1 }}>
-        <LoadingOverlay visible={isLoading} />
-        <Overlay
-          width='90%'
-          height='25%'
-          isVisible={Accept}>
-          <View style={styles.container}>
-            <View style={styles.Card}>
-
-              <Text style={{ fontSize: 20, textAlign: 'center', marginBottom: 20 }}>Are you sure you want to deny the order?</Text>
-              <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-                <TouchableHighlight
-                  onPress={() => this.setState({ Accept: false })}
-                  underlayColor='#fff'>
-                  <FontAwesome name='check-circle' size={60} style={{ color: '#5cb85c', marginRight: 50 }} />
-                </TouchableHighlight>
-                <TouchableHighlight
-                  onPress={() => this.setState({ isVisible: true, Accept: false })}
-                  underlayColor='#fff'>
-                  <FontAwesome name='times-circle' size={60} style={{ color: '#d9534f' }} />
-                </TouchableHighlight>
-              </View>
-            </View>
-          </View>
-        </Overlay>
-
-
-
-        <Overlay
-          width='90%'
-          height='90%'
-          isVisible={isVisible}>
-
-          <View style={styles.container}>
-            <View style={styles.Card}>
-              <ScrollView persistentScrollbar={true}>
-
-                <Text style={styles.headline}>Name</Text>
-                <Text style={styles.Textcontent}>Aresha Mae Pepino</Text>
-
-                <Text style={styles.headline}>Address</Text>
-                <Text style={styles.Textcontent}>BLK 8 Lot 11 Bonifacio St. Brgy. 23-C</Text>
-                <Text style={styles.Textcontent}>Panacan, Davao City</Text>
-
-                <Text style={styles.headline}>Note</Text>
-                <Text style={styles.Textcontent}>Tapad sa Mcdonalds og Inasal, Red ang gate, atbang sa Holy Cross Davao College</Text>
-
-
-                <Text style={styles.headline}>Date & Time</Text>
-                <View style={{ flexDirection: 'row' }}>
-
-                  <Text style={styles.Textcontent}>October 22, 2019</Text>
-
-
-                  <Text style={{ fontSize: 16, marginLeft: 'auto', marginRight: 5 }}>9:30 AM</Text>
-
-                </View>
-
-
-                <Text style={styles.headline}>Contact Number</Text>
-                <Text style={styles.Textcontent}>+63 999 9999 999</Text>
-                <Text style={{ fontSize: 20, marginTop: 40, fontWeight: 'bold' }}>Estimated Cost</Text>
-                <Text style={{ fontSize: 30, textAlign: 'center', marginTop: 5 }}>P500.00</Text>
-                <View style={{ flexDirection: 'row' }}>
-
-                  <TouchableHighlight style={styles.ready}
-                    onPress={() => this.setState({ isVisible: false, Accept: false })}
-                    underlayColor='#fff'>
-                    <Text style={[styles.submitText]}>
-                      Accept</Text>
-                  </TouchableHighlight>
-
-                  <TouchableHighlight style={styles.submit}
-                    onPress={() => this.setState({ isVisible: false, Accept: true })}
-                    underlayColor='#fff'>
-                    <Text style={[styles.submitText]}>
-                      Deny</Text>
-                  </TouchableHighlight>
-                </View>
-              </ScrollView>
-
-
-
-            </View>
-
-          </View>
-
-          <View style={{ position: 'absolute', bottom: 10, alignItems: 'center', alignSelf: 'center' }}>
-
-          </View>
-
-
-        </Overlay>
-
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          style={{ flex: 1 }} region={{
-            latitude: parseFloat(userlatitude),
-            longitude: parseFloat(userlongitude), latitudeDelta: 0.15,
-            longitudeDelta: 0.15
-          }}
-          showsUserLocation={true} >
-
-        </MapView>
+      <View style={{ backgroundColor: 'white' }}>
+        <Picker selectedValue={this.state.schedType} onValueChange={this.refAction.bind(this)} mode="dropdown" style={{ height: 40 }} >
+          {/* <Picker.Item value='' label='Select Home Type' style={{color:'grey'}} /> */}
+          {itemsource}
+        </Picker>
       </View>
+    );
+  }
+  refAction(typename) {
+    console.log(typename)
+    this.setState({ schedType: typename })
+  }
 
+  renderPickerExam() {
+    let itemsource = this.state.examSel.map((item, i) => <Picker.Item key={i} label={item.label} value={item.value} />);
+    return (
+      <View style={{ backgroundColor: 'white' }}>
+        <Picker selectedValue={this.state.examType} onValueChange={this.examAction.bind(this)} mode="dropdown" style={{ height: 40 }} >
+          {/* <Picker.Item value='' label='Select Home Type' style={{color:'grey'}} /> */}
+          {itemsource}
+        </Picker>
+      </View>
+    );
+  }
+  examAction(typename) {
+    if (typename == 'Consultation') {
+      this.setState({ disabled: true })
+    } else {
+      this.setState({ disabled: false })
+    }
+    this.setState({ examType: typename })
+  }
+
+  Sched() {
+    let from = moment(this.state.StartTime).format("hh:mm");
+    let to = moment(this.state.EndTime).format("hh:mm");
+    if (this.state.selectedStartDate == '') {
+      Alert.alert(
+        "Alert",
+        'Select Day',
+        [
+          { text: "Ok", onPress: () => console.log("later pressed") },
+        ],
+        { cancelable: false }
+      );
+    } else {
+      this.props.CreateSchedule(this.state.examType, this.state.selectedStartDate, from, to, this.state.schedType);
+      this.setState({ selectedStartDate: '' })
+      this.forceUpdate()
+
+    }
+  }
+
+  render() {
+    console.log(this.state.disabled)
+    const { selectedStartDate, StartTime, EndTime } = this.state;
+    let dates = moment(selectedStartDate).format("YYYY-MM-DD");
+    const finaltime = StartTime ? moment(StartTime).format("hh:mm A") : moment(new Date()).format("hh:mm A");
+    const Totime = EndTime ? moment(EndTime).format("hh:mm A") : moment(new Date()).format("hh:mm A");
+    return (
+      <ScrollView style={styles.back}>
+        <View>
+          <View style={styles.container}>
+
+            <Text style={styles.headline}>Type of Schedule</Text>
+            {this.renderPickerExam()}
+
+            <Text style={styles.headline}>Type</Text>
+            {this.renderPicker()}
+            <Text style={styles.headline}>Choose Schedule</Text>
+          </View>
+          <View style={styles.content}>
+            <Text style={{ marginBottom: 5 }}>Set Date</Text>
+            {/* <Calendars minDate={minDate}  width={280} onDateChange={this.onDateChange} /> */}
+            <Calendar
+              onDayPress={({ dateString }) => this.onDateChange(dateString)}
+              style={styles.Card}
+              minDate={new Date()}
+              markedDates={{ [dates]: { disabled: true, startingDay: true, color: '#780000', endingDay: true } }}
+              markingType={'period'}
+              theme={{
+                backgroundColor: '#ffffff',
+                calendarBackground: '#ffffff',
+                textSectionTitleColor: '#b6c1cd',
+                selectedDayBackgroundColor: '#00adf5',
+                selectedDayTextColor: '#ffffff',
+                todayTextColor: '#00adf5',
+                dayTextColor: '#2d4150',
+                textDisabledColor: '#d9e1e8',
+                dotColor: '#00adf5',
+                selectedDotColor: '#ffffff',
+                arrowColor: '#154c99',
+                disabledArrowColor: '#d9e1e8',
+                monthTextColor: 'black',
+                indicatorColor: 'blue',
+                textDayFontFamily: 'monospace',
+                textMonthFontFamily: 'monospace',
+                textDayHeaderFontFamily: 'monospace',
+                textDayFontWeight: '300',
+                textMonthFontWeight: 'bold',
+                textDayHeaderFontWeight: '300',
+                textDayFontSize: 16,
+                textMonthFontSize: 16,
+                textDayHeaderFontSize: 16
+              }}
+            />
+
+            <Text>From: </Text>
+            <DateTimePickerModal
+              mode="time"
+              locale="en_GB"
+              isVisible={this.state.isDateTimePickerVisible}
+              onConfirm={this.handleDatePicked}
+              onCancel={this.hideDateTimePicker}
+            />
+            <TouchableWithoutFeedback onPress={this.showDateTimePicker} >
+              <Text style={styles.time}>{finaltime}</Text>
+            </TouchableWithoutFeedback>
+
+            {this.state.disabled == false ?
+              <View>
+
+
+                <Text>To:</Text>
+                <DateTimePickerModal
+                  mode="time"
+                  locale="en_GB"
+                  isVisible={this.state.isDateTimePickerVisible1}
+                  onConfirm={this.handleDatePicked1}
+                  onCancel={this.hideDateTimePicker1}
+                />
+                <TouchableWithoutFeedback onPress={this.showDateTimePicker1}>
+                  <Text style={styles.time}>{Totime}</Text>
+                </TouchableWithoutFeedback>
+              </View>
+
+              : null}
+
+          </View>
+          <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+            <TouchableHighlight style={styles.submit}
+              onPress={() => this.Sched()}
+              underlayColor='#fff'>
+              <Text style={[styles.submitText]}>Proceed</Text>
+            </TouchableHighlight>
+          </View>
+        </View>
+
+      </ScrollView>
     );
   }
 
   static navigationOptions = ({ navigation }) => {
     const { params = {} } = navigation.state;
-    if (params.Type == 2 || params.Type==5) {
-      return {
-        headerBackground: (
-          <ImageBackground
-            style={{ width: '100%', height: '100%' }}
-            source={require('../assets/images/header.png')}
-          />
-        ),
-        title: "Home",
-        headerTitleStyle: { flex: 1, textAlign: 'center', color: 'white', fontSize: 20 },
-        headerTintColor: 'white',
-        headerStyle: {
-          backgroundColor: '#4169E1',
-        },
+        return {
+          headerBackground: (
+            <ImageBackground
+              style={{ width: '100%', height: '100%' }}
+              source={require('../assets/images/header.png')}
+            />
+          ),
+          title: "Schedule",
+          headerTitleStyle: { flex: 1, textAlign: 'center', color: 'white', fontSize: 20 },
+          headerTintColor: 'white',
+          headerStyle: {
+            backgroundColor: '#780000',
+          },
+          headerRight:
+            <TouchableHighlight onPress={() => params.Save()} accessible={false}>
+              <FontAwesome name='sign-out' size={25} style={{ marginRight: 20, color: 'white' }} />
+            </TouchableHighlight>
+      
+        };
 
-      };
-    } else {
-      return {
-        headerBackground: (
-          <ImageBackground
-            style={{ width: '100%', height: '100%' }}
-            source={require('../assets/images/header.png')}
-          />
-        ),
-        title: "Home",
-        headerTitleStyle: { flex: 1, textAlign: 'center', color: 'white', fontSize: 20 },
-        headerTintColor: 'white',
-        headerStyle: {
-          backgroundColor: '#4169E1',
-        },
-
-        headerRight: <Switch
-          thumbColor='white'
-          trackColor={{ true: '#5cb85c', false: '#d9534f' }}
-          style={{ transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }], color: '#5cb85c', marginRight: 5 }}
-          onValueChange={() => params.handleSave(params.switchValue)}
-          value={navigation.state.params.switchValue} />
-      };
-    }
-  };
+};
 }
+  
 
 const mapStateToProps = (state) => {
-  return state.toggle
+  return state.schedule
 }
-export default connect(mapStateToProps, {  })(HomeScreen);
+export default connect(mapStateToProps, { CreateSchedule, UserLogoutAsync })(HomeScreen);
+
 
 
 const styles = StyleSheet.create({
-  mapPinContainer: {
-    height: 25,
-    width: 25,
-    borderRadius: 25 / 2,
-    overflow: 'hidden',
-    borderColor: 'black',
-    borderWidth: 2
-  }, profileimage: {
+  container: {
     flex: 1,
-    width: null,
-    height: null
-  }, container: {
-    flex: 1,
-    alignItems: 'center',
+    justifyContent: 'center',
     textAlign: 'center',
+    backgroundColor: "#F5F5F5",
+    marginRight: 40,
+    marginLeft: 40,
+  },
+  content: {
+    marginRight: 40,
+    marginLeft: 40,
   },
   Card: {
-    width: '95%',
-    height: '100%',
-    padding: 15,
-    borderRadius: 20,
-    justifyContent: 'center',
+    borderRadius: 25,
+    borderColor: '#F5F5F5',
+    marginBottom: 10,
+    paddingBottom: 10
+
   },
   headline: {
-    fontSize: 20,
-    marginTop: 15,
-  }, Textcontent: {
-    fontSize: 16,
-  }
-  , itemcontainer: {
+    textAlign: 'center',
+    fontSize: 22,
+    fontFamily: 'Arial',
+    marginTop: 20,
+    marginBottom: 10
+
+  },
+  textContent: {
+    textAlign: 'center',
+    fontSize: 15,
+    fontFamily: 'Arial',
+    marginTop: 10,
+
+  },
+  back: {
+    backgroundColor: "#F5F5F5"
+  },
+  time: {
+    marginTop: 30,
+    marginBottom: 20,
+    textAlign: 'center',
+    fontSize: 40,
+    fontFamily: 'Arial',
+    color: Colors.CustomButton
+  }, itemcontainer: {
+    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'flex-start' // if you want to fill rows left to right
   },
   item: {
-    width: '50%', // is 50% of container width
-  },
-  item2: {
-    width: '45%',
-    marginLeft: 10, marginRight: 10,
-    alignItems: 'flex-start' // is 50% of container width
+    width: '50%' // is 50% of container width
   }, submit: {
+    marginRight: 40,
+    marginLeft: 40,
+    marginBottom: 40,
+    marginTop: 20,
     paddingTop: 10,
     paddingBottom: 10,
-    backgroundColor: Colors.CustomButton,
+    backgroundColor: '#780000',
     borderRadius: 25,
     borderWidth: 1,
     borderColor: '#fff',
-    width: '45%',
-    backgroundColor: '#d9534f',
-    marginLeft: 5, marginRight: 5
-
-  }, ready: {
-    paddingTop: 10,
-    paddingBottom: 10,
-    backgroundColor: Colors.CustomButton,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#fff',
-    width: '45%',
-    backgroundColor: '#5cb85c',
-    marginLeft: 5, marginRight: 5
+    width: '50%',
 
   },
   submitText: {
     color: '#fff',
     textAlign: 'center',
+    fontSize: 20
   }
 });

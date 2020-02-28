@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-community/async-storage';
 import Endpoint from '../Constants/Endpoints';
-
+import { Alert} from 'react-native';
 const getTransaction = () => {
     return {
         type: 'GET_TRANSACTION'
@@ -21,7 +21,7 @@ const getTransactionsFailed = (message) => {
 
 
 export const ListOfTransactions = (page) => {
-    console.log(Endpoint.ListOfTransaction_URL + '?page=' + page)
+    console.log(Endpoint.ListofSchedules )
     return async (dispatch) => {
         dispatch(getTransaction());
         try {
@@ -98,6 +98,7 @@ export const TransactionDetails = (id) => {
                 })
                     .then((response) => response.json())
                     .then((responseJson) => {
+                        console.log(responseJson)
                         dispatch(getDetailsSuccess(responseJson));
                     })
                     .catch((error) => {
@@ -175,5 +176,97 @@ export const StatusUpdate = (question, choice, navigation, Route) => {
             console.log(error);
             dispatch(UpdateStatusFailed('Internal Server Error'))
         }
+    }
+}
+
+
+
+const Schedule = () => {
+    return {
+        type: 'SCHEDULE'
+    }
+}
+const ScheduleSuccess = (data) => {
+    return {
+        type: 'SCHEDULE_SUCCESS',
+        schedule: data
+    }
+}
+const ScheduleFailed = (message) => {
+    return {
+        type: 'SCHEDULE_FAILED',
+        message: message
+    }
+}
+
+export const CreateSchedule = (type, date, from, to,sched) => {
+   let data={};
+    if (type=='Consultation'){
+        data={
+            type:type,
+            date:date+' '+from,
+            isConfirmed:0,
+            typeOfSched:sched
+        }
+    }else{
+        data={
+            type:type,
+            date:date,
+            isConfirmed:0,
+            from:from,
+            to:to,
+            typeOfSched:sched
+        }
+    }
+    console.log(date+' '+from+'hello')
+    console.log(Endpoint.CreateSchedule_URL)
+
+    return async (dispatch) => {
+        dispatch(Schedule());
+        try {
+            await AsyncStorage.getItem('accessToken', (error, accessToken) => {
+                fetch(Endpoint.CreateSchedule_URL, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'applcation/json',
+                        Authorization: `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then((response) => response.json())
+                    .then((responseJson) => {
+                       if(responseJson.isConfirmed==0){
+                        Alert.alert(
+                            "Alert",
+                            'Successfully scheduled for '+type,
+                            [
+                              { text: "Ok", onPress: () => console.log("later pressed") },
+                            ],
+                            { cancelable: false }
+                          );
+                       }else{
+                        Alert.alert(
+                            "Alert",
+                            'Something went wrong.',
+                            [
+                              { text: "Ok", onPress: () => console.log("later pressed") },
+                            ],
+                            { cancelable: false }
+                          );
+                       }
+                        dispatch(ScheduleSuccess(responseJson));
+                     
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        dispatch(ScheduleFailed())
+                    })
+            });
+        } catch (error) {
+            console.log(error);
+            dispatch(ScheduleFailed('Internal Server Error'))
+        }
+        
     }
 }

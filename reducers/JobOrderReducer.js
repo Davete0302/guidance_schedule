@@ -14,7 +14,7 @@ const initialState = {
     accept_job: [],
     listLoading: false,
     job_order_list:[{"created_at": "2020-02-18 16:08:14", "end_date": "2020-02-20 11:00", "id": 4, "isConfirmed": 1, "schedule_type": "Consultation", "start_date": "2020-02-20 09:00", "updated_at": "2020-02-18 16:09:20", "user_id": 3}],
-    rating: [],
+    schedule: [],
     job_details: [],
 
 }
@@ -79,18 +79,17 @@ export const UpdateStatusReducer = (state = initialState, action) => {
             return state;
     }
 }
-
-// export const RatingReducer = (state = initialState, action) => {
-//     switch (action.type) {
-//         case 'RATING':
-//             return { ...state,isLoading: true }
-//         case 'RATING_SUCCESS':
-//             // console.log('list',action.list_of_providers )
-//             return { ...state, isLoading: false, rating: action.rating }
-//         case 'RATING_FAILED':
-//             return { ...state,isLoading: false }
-//         default:
-//             return state; 
-//     }
-// } 
+export const ScheduleReducer = (state = initialState, action) => {
+    switch (action.type) {
+        case 'SCHEDULE':
+            return { ...state,isLoading: true }
+        case 'SCHEDULE_SUCCESS':
+            // console.log('list',action.list_of_providers )
+            return { ...state, isLoading: false, schedule: action.schedule }
+        case 'SCHEDULE_FAILED':
+            return { ...state,isLoading: false }
+        default:
+            return state; 
+    }
+} 
 

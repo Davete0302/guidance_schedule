@@ -123,7 +123,7 @@ class JobOrderScreenDetails extends React.Component {
             <View style={styles.Card}>
 
               <Text style={styles.headline}>Question {questionId} of 21</Text>
-    <Text style={{fontSize:20,fontWeight:'bold',marginTop:5}}>{job_details.question}</Text>
+    <Text style={{fontSize:20,fontWeight:'bold',marginTop:5}}>Please choose the answer that represents your feeling</Text>
 
           
               <RadioForm
