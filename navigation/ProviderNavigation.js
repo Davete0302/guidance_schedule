@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from 'react-navigation-tabs';
 import { Text, View, Linking } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
+import { Avatar, Badge, Icon, withBadge } from 'react-native-elements'
 //Home Screen
 import HomeScreen from '../screens/HomeScreen';
 
@@ -103,7 +104,7 @@ class SupportScreen extends React.Component {
   render() {
     return (
       <View>
-        {this.dialCall('09291639349 ')}
+        {this.dialCall('665-9606')}
       </View>
     );
   }
@@ -114,6 +115,7 @@ export default createAppContainer(
     {
       Home: HomeStack,
       Dashboard: DashboardStack,
+      Support:SupportScreen,
       Notification: NotificationStack,
     }, {
     backBehavior: 'history',
@@ -135,16 +137,26 @@ export default createAppContainer(
       tabBarIcon: ({ focused, horizontal, tintColor }) => {
         const { routeName } = navigation.state;
         let iconName;
+        let opac=0;
         if (routeName === 'Home') {
           iconName = `clock`;
+          opac=0;
         } else if (routeName === 'Notification') {
           iconName = `bell`;
+          opac=1;
         } else if (routeName === 'Dashboard') {
           iconName = `file`;
+          opac=0;
         } else if (routeName === 'Support') {
           iconName = 'phone';
+          opac=0;
         }
-        return <MaterialCommunityIcons name={iconName} size={30} color={tintColor} style={{ justifyContent: 'center', marginTop: 5 }} active={tintColor} />;
+        return <View><MaterialCommunityIcons name={iconName} size={35} color={tintColor} style={{justifyContent:'center',marginTop:5}} active={tintColor} 
+        />
+        {notifcount>0?
+        <Badge status="error" value={notifcount} containerStyle={{ position: 'absolute',alignSelf:'center',alignContent:'center', top: 8,left:15,opacity:opac }}/>
+        :null}
+        </View>;
       }
     }),
     resetOnBlur: true,

@@ -69,7 +69,7 @@ class JobOrderScreenDetails extends React.Component {
     }
     // this.setState({nextStep: currentstep,disabled:true,Texts:'Done'});
   }
-  Navigate() {
+  Navigate= async () => {
  
     this.props.StatusUpdate(id, this.state.choices+1,this.props.navigation,'DetailsJob');
     this.setState({choices:-1})

@@ -9,6 +9,7 @@ import { CreateSchedule } from '../actions/Transactions';
 import { connect } from 'react-redux';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { UserLogoutAsync } from '../actions/Login';
+import { WebView } from 'react-native-webview';
 let pageTitle;
 
 class HomeScreen extends React.Component {
@@ -168,8 +169,8 @@ class HomeScreen extends React.Component {
   }
 
   Sched() {
-    let from = moment(this.state.StartTime).format("hh:mm");
-    let to = moment(this.state.EndTime).format("hh:mm");
+    let from = moment(this.state.StartTime).format("HH:mm");
+    let to = moment(this.state.EndTime).format("HH:mm");
     if (this.state.selectedStartDate == '') {
       Alert.alert(
         "Alert",
@@ -208,6 +209,10 @@ class HomeScreen extends React.Component {
           <View style={styles.content}>
             <Text style={{ marginBottom: 5 }}>Set Date</Text>
             {/* <Calendars minDate={minDate}  width={280} onDateChange={this.onDateChange} /> */}
+            {/* <WebView
+          source={{ uri: 'http://54.254.162.165/webview' }}
+          style={{width:'auto',height:500,marginBottom:30}} /> */}
+            {/* http://54.254.162.165/webview */}
             <Calendar
               onDayPress={({ dateString }) => this.onDateChange(dateString)}
               style={styles.Card}
@@ -240,21 +245,21 @@ class HomeScreen extends React.Component {
                 textDayHeaderFontSize: 16
               }}
             />
-
-            <Text>From: </Text>
-            <DateTimePickerModal
-              mode="time"
-              locale="en_GB"
-              isVisible={this.state.isDateTimePickerVisible}
-              onConfirm={this.handleDatePicked}
-              onCancel={this.hideDateTimePicker}
-            />
-            <TouchableWithoutFeedback onPress={this.showDateTimePicker} >
-              <Text style={styles.time}>{finaltime}</Text>
-            </TouchableWithoutFeedback>
-
-            {this.state.disabled == false ?
+            {this.state.disabled != false ?
               <View>
+                <Text>From: </Text>
+                <DateTimePickerModal
+                  mode="time"
+                  locale="en_GB"
+                  isVisible={this.state.isDateTimePickerVisible}
+                  onConfirm={this.handleDatePicked}
+                  onCancel={this.hideDateTimePicker}
+                />
+                <TouchableWithoutFeedback onPress={this.showDateTimePicker} >
+                  <Text style={styles.time}>{finaltime}</Text>
+                </TouchableWithoutFeedback>
+
+
 
 
                 <Text>To:</Text>
@@ -288,29 +293,29 @@ class HomeScreen extends React.Component {
 
   static navigationOptions = ({ navigation }) => {
     const { params = {} } = navigation.state;
-        return {
-          headerBackground: (
-            <ImageBackground
-              style={{ width: '100%', height: '100%' }}
-              source={require('../assets/images/header.png')}
-            />
-          ),
-          title: "Schedule",
-          headerTitleStyle: { flex: 1, textAlign: 'center', color: 'white', fontSize: 20 },
-          headerTintColor: 'white',
-          headerStyle: {
-            backgroundColor: '#780000',
-          },
-          headerRight:
-            <TouchableHighlight onPress={() => params.Save()} accessible={false}>
-              <FontAwesome name='sign-out' size={25} style={{ marginRight: 20, color: 'white' }} />
-            </TouchableHighlight>
-      
-        };
+    return {
+      headerBackground: (
+        <ImageBackground
+          style={{ width: '100%', height: '100%' }}
+          source={require('../assets/images/header.png')}
+        />
+      ),
+      title: "Schedule",
+      headerTitleStyle: { flex: 1, textAlign: 'center', color: 'white', fontSize: 20 },
+      headerTintColor: 'white',
+      headerStyle: {
+        backgroundColor: '#780000',
+      },
+      headerRight:
+        <TouchableHighlight onPress={() => params.Save()} accessible={false}>
+          <FontAwesome name='sign-out' size={25} style={{ marginRight: 20, color: 'white' }} />
+        </TouchableHighlight>
 
-};
+    };
+
+  };
 }
-  
+
 
 const mapStateToProps = (state) => {
   return state.schedule

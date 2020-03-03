@@ -204,8 +204,10 @@ export const CreateSchedule = (type, date, from, to,sched) => {
     if (type=='Consultation'){
         data={
             type:type,
-            date:date+' '+from,
+            date:date,
             isConfirmed:0,
+            from:from,
+            to:to,
             typeOfSched:sched
         }
     }else{
@@ -213,12 +215,10 @@ export const CreateSchedule = (type, date, from, to,sched) => {
             type:type,
             date:date,
             isConfirmed:0,
-            from:from,
-            to:to,
             typeOfSched:sched
         }
     }
-    console.log(date+' '+from+'hello')
+    console.log(data)
     console.log(Endpoint.CreateSchedule_URL)
 
     return async (dispatch) => {
@@ -235,8 +235,10 @@ export const CreateSchedule = (type, date, from, to,sched) => {
                     body: JSON.stringify(data)
                 })
                     .then((response) => response.json())
-                    .then((responseJson) => {
+                    .then(async (responseJson) => {
+                        console.log(responseJson)
                        if(responseJson.isConfirmed==0){
+                           
                         Alert.alert(
                             "Alert",
                             'Successfully scheduled for '+type,

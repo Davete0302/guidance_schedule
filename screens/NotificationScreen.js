@@ -68,6 +68,7 @@ class NotificationScreen extends React.Component {
               data={notification_list}
               renderItem={({ item }) =>
               <TouchableNativeFeedback accessible={false}>
+              <View>
               <View style={styles.Card}>
                 <View style={styles.itemcontainer}>
                   <View style={styles.item1}>
@@ -90,7 +91,12 @@ class NotificationScreen extends React.Component {
                   </View>
                 </View>
               </View>
-
+              {item.score>=29 && item.score<=63?
+              <View>
+              <Text style={{ fontSize: 15,color:'red',textAlign:'center',fontWeight:'bold' }}>Need for counseling. Please see your conselour or contact 655-9606`</Text>
+              </View>
+              :null}
+              </View>
             </TouchableNativeFeedback>
               }
               keyExtractor={(item, index) => index.toString()}

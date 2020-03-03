@@ -35,10 +35,14 @@ class LoginScreen extends React.Component {
   }
   getUserType = async () => {
     let token = await AsyncStorage.getItem('accessToken');
-
+    let count = await AsyncStorage.getItem('count');
+    let email = await AsyncStorage.getItem('email');
+    let pass = await AsyncStorage.getItem('pass');
+   
+    notifcount=count;
     try {
       if (token != null || token > 3) {
-        this.Navigate('Provider', 'title');
+        this.fetchdata(email,pass)
       }
     } catch (error) {
       console.log(error)
@@ -60,8 +64,12 @@ class LoginScreen extends React.Component {
       .then(async (json) => {
         try {
           console.log(json)
+          await AsyncStorage.setItem('email', uname);
+          await AsyncStorage.setItem('pass', password);
+          await AsyncStorage.setItem('count', json.count+"");
           await AsyncStorage.setItem('accessToken', json.bearer_token).then(() => {
             this.setState({ spinner: false });
+            notifcount=json.count;
             this.Navigate('CustomerDetails', 'title', json.type, json.active);
           });
         } catch (error) {

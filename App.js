@@ -13,7 +13,7 @@ global.deviceToken='';
 global.deviceType='';
 global.questionId=1;
 global.searchStorage = [];
-
+global.notifcount=0;
 export default class App extends Component {
   constructor(props) {
     super(props)
