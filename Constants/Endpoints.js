@@ -12,4 +12,5 @@ export default {
     Questions_URL:`${BASE_URL}getQuestions`,
     Submit_URL:`${BASE_URL}submit`,
     Logout_URL:`${BASE_URL}`,
+    Notif_URL:`${BASE_URL}getNotif`,
 }

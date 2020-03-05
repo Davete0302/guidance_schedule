@@ -1,162 +1,124 @@
 import React from 'react';
-import { StyleSheet, Text, TextInput, View, TouchableHighlight, BackHandler , Linking, ImageBackground, Dimensions } from 'react-native';
-import Colors from '../Constants/Colors';
-import { ScrollView } from 'react-native-gesture-handler';
-import StepIndicator from 'react-native-step-indicator';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import { StyleSheet, Text, View, TouchableNativeFeedback, ImageBackground, FlatList, RefreshControl } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import RadioForm, {RadioButton, RadioButtonInput, RadioButtonLabel} from 'react-native-simple-radio-button';
-import { TransactionDetails, StatusUpdate } from '../actions/Transactions';
+import { ScrollView } from 'react-native-gesture-handler';
+import { ListOfNotifications, ListOfNotificationsPagination } from '../actions/NotificationsActions';
 import { connect } from 'react-redux';
-import AsyncStorage from '@react-native-community/async-storage';
 import { LoadingOverlay } from "../components/Indicator";
-let pageTitle='',id='';
-class JobOrderScreenDetails extends React.Component {
+import { UserLogoutAsync } from '../actions/Login';
+import AsyncStorage from '@react-native-community/async-storage';
+class NotificationScreen extends React.Component {
   constructor(props) {
     super(props);
-  
-    const { navigation } = this.props;
-    let steps = JSON.stringify(navigation.getParam('Step', '4')).replace(/"/g, '');
-    let Type = JSON.stringify(navigation.getParam('type', 'default value')).replace(/"/g, '');
-      this.state = {
-        nextStep: steps, finalStep: steps, disabled: false, Texts: 'Mark Service as Done', type: Type,
-       choices:-1
-      };
-    
-
+    this.state = {
+      refreshing: false, Type: 0, load: 1,
+    };
   }
   componentDidMount() {
-    BackHandler.addEventListener('hardwareBackPress', this.onBackButtonPressed);
     this.willFocusSubscription = this.props.navigation.addListener(
       'willFocus',
       () => {
-       
-        this.setState({choices:-1})
-        const { navigation } = this.props;
-        this.props.navigation.setParams({ handleSave: this.dialCall });
-        id = JSON.stringify(navigation.getParam('questionId', 'default value')).replace(/"/g, '');
-        console.log(id,'question id');
-        this.props.TransactionDetails(id);
+        this.props.navigation.setParams({ Save: this.Logout });
+        this.props.ListOfNotifications();
       }
     );
   }
 
   componentWillUnmount() {
-    BackHandler.removeEventListener('hardwareBackPress', this.onBackButtonPressed);
     this.willFocusSubscription.remove();
+  }
+  Logout = (value, response) => {
+    console.log('clicked')
+    this.props.UserLogoutAsync(this.props.navigation);
+  }
+  _onRefresh = () => {
+    this.setState({ refreshing: true });
+    this.props.ListOfNotifications(1);
+    this.setState({ refreshing: false });
+  }
+
+  LoadMore = () => {
+    // const { notification_list } = this.props;
+    // console.log(notification_list.list.current_page)
+    // if (notification_list.list.current_page < notification_list.list.last_page && notification_list.length != 0) {
+    //   this.setState({ load: this.state.load + 1 })
+    //   this.props.ListOfNotificationsPagination(this.state.load)
+    // } 
+  }
+
+  Navigate(RouteTo, HeaderTitle, serv, id, typeID, category) {
+    
+    let header = HeaderTitle.replace(/"/g, '');
+    this.props.navigation.navigate(RouteTo, { title: header});
   }
 
   
-  onBackButtonPressed() {
-    return true;
-  }
-  Done(current) {
-    const { navigation } = this.props;
-    let id = JSON.stringify(navigation.getParam('id', 'default value'));
-    let Type = JSON.stringify(navigation.getParam('type', 'default value')).replace(/"/g, '');
-    let currentstep = Number.parseInt(current) + 1;
-
-    if (currentstep > 6) {
-      this.setState({ nextStep: currentstep, disabled: true, Texts: 'Done' });
-      this.props.StatusUpdate(id, 6)
-
-    } else if (Type == 2 && currentstep == 5 || Type == 5 && currentstep == 5) {
-      this.setState({ nextStep: currentstep, disabled: true, Texts: 'Pending' });
-      this.Navigate('Dashboard');
-
-    } else {
-      this.setState({ nextStep: currentstep });
-      this.props.StatusUpdate(id, currentstep)
-    }
-    // this.setState({nextStep: currentstep,disabled:true,Texts:'Done'});
-  }
-  Navigate() {
-    this.props.StatusUpdate(questionId, this.state.choices+1,this.props.navigation,'DetailsJob');
-    // this.props.navigation.navigate('JobDetails');
-  }
-
-  renderText() {
-    let { finalStep, type } = this.state;
-    if (finalStep == 1 && type == 2) {
-      return (
-        <View>
-          <Text style={{ fontSize: 20, marginTop: 20, fontWeight: 'bold' }}>Final Price</Text>
-          <TextInput placeholder="Enter Total Price" keyboardType='numeric' style={{ backgroundColor: "white", height: 40, textAlign: 'center', marginBottom: 10, marginTop: 5 }} />
-        </View>
-      )
-    }
-  }
-  renderStepIndicator = params => (
-    <FontAwesome {...getStepIndicatorIconConfig(params)} />
-  )
-
-  dialCall = (number) => {
-    const { navigation } = this.props;
-    let phone = JSON.stringify(navigation.getParam('phone', 'default value'));
-    let phoneNumber = '';
-    if (Platform.OS === 'android') { phoneNumber = `tel:${phone}`; }
-    else { phoneNumber = `telprompt:${phone}`; }
-    Linking.openURL(phoneNumber);
-  };
-  currencyFormat(num) {
-    let value = parseFloat(num)
-    return 'P ' + value.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-  }
   render() {
-
-    const { navigation } = this.props;
-    let { nextStep, disabled, Texts } = this.state;
-    pageTitle = JSON.stringify(navigation.getParam('title', 'default value'));
-    let Service = JSON.stringify(navigation.getParam('Service', 'default value'));
-    const serv = Service.replace(/"/g, '');
-    const { job_details, isLoading } = this.props.jobdetails;
-    const {Loading } = this.props.status;
+    let { refreshing } = this.state;
+    let { notification_list, isLoading, notifications, noticationsLoading } = this.props;
+    console.log(notification_list)
     return (
+      <View style={styles.container}>
+        <View style={{ alignItems: 'center' }}>
+        
+          {notification_list.length != 0 ?
+            <FlatList
+              showsHorizontalScrollIndicator={false}
+              numColumns={1}
+              data={notification_list}
+              renderItem={({ item }) =>
+              <View>
+              <View style={styles.Card}>
+                <View style={styles.itemcontainer}>
+                  <View style={styles.item1}>
+                    <View style={{flexDirection:'row'}}>
+                  <Text style={{fontSize:15,fontWeight:'bold'}}>{item.name}</Text>
+                  <Text style={{marginLeft:'auto',fontSize:12,marginRight:15,fontWeight:'bold'}}>{item.course}</Text>
+                  </View>
+                  <Text style={styles.headline}>{item.email}</Text>
+                    <Text style={styles.headline}>{item.schedule_type}</Text>
+                    <View style={{flexDirection:'row'}}>
+                    <Text style={{ fontSize: 12 }}>Score : {item.score} - </Text>
+                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=0 && item.score<=13?'Mild':null}</Text>
+                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=14 && item.score<=19?'Minimal':null}</Text>
+                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=20 && item.score<=28?'Moderate':null}</Text>
+                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=29 && item.score<=63?'Severe':null}</Text>
+                  </View>
+              
+                    <Text style={{ fontSize: 10 }}>{item.start_date}</Text>
 
-      <ScrollView style={{ backgroundColor: '#F8F8F8' }}>
-      <LoadingOverlay visible={isLoading}/>
-      <LoadingOverlay visible={Loading}/>
-          <View style={styles.container}>
-            <View style={{ width: '80%', alignSelf: 'center', marginTop: 10 }}>
+                  </View>
+                </View>
+              </View>
+              {item.score>=29 && item.score<=63?
+              <View>
+              <Text style={{ fontSize: 15,color:'red',textAlign:'center',fontWeight:'bold' }}>Need for counseling. Please see your conselour or contact 655-9606.</Text>
+              </View>
+              :null}
+              </View>
+              }
+              keyExtractor={(item, index) => index.toString()}
+              onEndReached={this.LoadMore}
+              onEndReachedThreshold={0.1}
+              ListFooterComponent={this.ListFooterComponent}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={this._onRefresh}
+                />
+              }
+            />
+            : null}
+        </View>
+        <View style={{ marginBottom: 5 }}></View>
+      </View>
 
-            </View>
-            <View style={styles.Card}>
-
-              <Text style={styles.headline}>Question {questionId} of 21</Text>
-    <Text style={{fontSize:20,fontWeight:'bold',marginTop:5}}>Please choose the answer that represents your feeling</Text>
-
-          
-              <RadioForm
-          radio_props={job_details.choices}
-          initial={-10}
-          style={{marginTop:20}}
-          buttonColor={'#780000'}
-          formHorizontal={false}
-          labelHorizontal={true}
-          buttonSize={10}
-          onPress={(value) => this.setState({choices:value})}
-        />
-           
-            </View>
-            <TouchableHighlight style={
-              this.state.choices==-1
-                ? styles.ready
-                : styles.submit
-            }
-              disabled={this.state.choices==5?true:false}
-              onPress={() => this.Navigate(nextStep)}
-              underlayColor='#fff'>
-              <Text style={[styles.submitText]}>
-                Next Question</Text>
-            </TouchableHighlight> 
-
-          </View>
-      </ScrollView>
 
     );
   }
   static navigationOptions = ({ navigation }) => {
     const { params = {} } = navigation.state;
+
     return {
       headerBackground: (
         <ImageBackground
@@ -164,25 +126,24 @@ class JobOrderScreenDetails extends React.Component {
           source={require('../assets/images/header.png')}
         />
       ),
-      title: 'Exam',
+      title: "Result",
       headerTitleStyle: { flex: 1, textAlign: 'center', color: 'white', fontSize: 20 },
       headerTintColor: 'white',
-      headerLeft: null,
       headerStyle: {
-        backgroundColor: '#780000',
+        backgroundColor: '#4169E1',
       },
+      headerRight: <TouchableNativeFeedback onPress={() => params.Save()} accessible={false}>
+        <FontAwesome name='sign-out' size={25} style={{ marginRight: 20, color: 'white' }} />
+      </TouchableNativeFeedback>
     };
-  };
-
+  }
 }
 const mapStateToProps = (state) => {
-  const { jobdetails, status } = state;
-  return {
-    jobdetails: jobdetails,
-    status: status
-  };
+  return state.notiflist
 }
-export default connect(mapStateToProps, { TransactionDetails, StatusUpdate })(JobOrderScreenDetails);
+export default connect(mapStateToProps, { ListOfNotifications, UserLogoutAsync, ListOfNotificationsPagination })(NotificationScreen);
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -192,59 +153,46 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   Card: {
-    width: '80%',
-    padding: 15,
+    width: '96%',
     borderRadius: 20,
-    marginTop: 30,
+    marginTop: 5,
     backgroundColor: '#fff',
     justifyContent: 'center',
     borderColor: '#F5F5F5',
     borderWidth: 1
   },
   headline: {
-    fontSize: 20,
-    marginTop: 15,
+    fontSize: 12,
+    fontWeight: 'bold'
   }, Textcontent: {
-    fontSize: 16,
-  }
-  , itemcontainer: {
+    fontSize: 10,
+    color: 'white',
+    paddingLeft: 15
+  },
+  itemcontainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'flex-start' // if you want to fill rows left to right
+    marginLeft: 20,
+    marginBottom: 5,
+    marginTop: 5
+
   },
   item: {
-    width: '50%', // is 50% of container width
+    width: '15%', // is 50% of container width
+    alignItems: 'center',
   },
-  item2: {
-    width: '50%',
-    alignItems: 'flex-start' // is 50% of container width
-  }, submit: {
-    paddingTop: 10,
-    paddingBottom: 10,
-    backgroundColor: Colors.CustomButton,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#fff',
-    width: '50%',
-    marginTop: 15,
-    marginBottom: 30
-
-  }, ready: {
-    paddingTop: 10,
-    paddingBottom: 10,
-    backgroundColor: Colors.CustomButton,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#fff',
-    width: '50%',
-    marginTop: 15,
-    backgroundColor: 'grey',
-    marginBottom: 30
+  item1: {
+    width: '100%', // is 50% of container width
 
   },
-  submitText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold'
+  text: {
+    fontSize: 10
+  }, logoImage: {
+    height: 30,
+    width: 30,
+    marginTop: 10,
+    marginLeft: 10
+  }, row: {
+    flexDirection: 'row'
   }
 });

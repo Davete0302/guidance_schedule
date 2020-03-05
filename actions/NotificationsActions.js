@@ -49,3 +49,53 @@ export const ListOfNotifications = (page) => {
         }
     }
 }
+
+
+const getResult= () => {
+    return {
+        type: 'GET_RESULT'
+    }
+}
+const getResultSuccess = (data) => {
+    return {
+        type: 'GET_RESULT_SUCCESS',
+        result_list: data
+    }
+}
+const getResultFailed = (message) => {
+    return {
+        type: 'GET_RESULT_FAILED',
+        message: message
+    }
+}
+
+
+export const ListOfResult = (page) => {
+    return async (dispatch) => {
+        dispatch(getResult());
+        try {
+            await AsyncStorage.getItem('accessToken', (error, accessToken) => {
+                fetch(Endpoint.Notif_URL, {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'applcation/json',
+                        Authorization: `Bearer ${accessToken}`
+                    }
+                })
+                    .then((response) => response.json())
+                    .then((responseJson) => {
+                        console.log(responseJson)
+                        dispatch(getResultSuccess(responseJson));
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        dispatch(getResultFailed())
+                    })
+            });
+        } catch (error) {
+            console.log(error);
+            dispatch(getResultFailed('Internal Server Error'))
+        }
+    }
+}

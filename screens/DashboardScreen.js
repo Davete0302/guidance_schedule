@@ -90,6 +90,7 @@ class NotificationScreen extends React.Component {
     }
 
     Navigate = async (RouteTo, HeaderTitle, id,type,date) => {
+        console.log(type)
         let header = HeaderTitle.replace(/"/g, '');
         if(id==0){
             Alert.alert(
@@ -100,7 +101,7 @@ class NotificationScreen extends React.Component {
                 ],
                 { cancelable: false }
             )
-        }else if(type=='Consultation'){
+        }else if(type!="Examination - Beck's Depression Inventory"){
             Alert.alert(
                 'Alert',
                 'Not available.',

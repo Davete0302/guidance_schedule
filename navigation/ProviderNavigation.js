@@ -58,6 +58,26 @@ DashboardStack.navigationOptions = ({ navigation }) => {
 
 DashboardStack.path = '';
 
+const ResultStack = createStackNavigator({
+  JobDetails: JobOrderLaundryDetailsScreen,
+});
+
+ResultStack.navigationOptions = ({ navigation }) => {
+  let tabBarVisible = true;
+
+  if (navigation.state.index > 0) {
+    tabBarVisible = false;
+
+  }
+
+  return {
+    tabBarVisible,
+  };
+};
+
+ResultStack.path = '';
+
+
 const NotificationStack = createStackNavigator({
   Notification: NotificationScreen,
 });
@@ -116,6 +136,7 @@ export default createAppContainer(
       Home: HomeStack,
       Dashboard: DashboardStack,
       Support:SupportScreen,
+      Result:ResultStack,
       Notification: NotificationStack,
     }, {
     backBehavior: 'history',
@@ -131,6 +152,9 @@ export default createAppContainer(
           labelName = `Exams`;
         } else if (routeName === 'Support') {
           labelName = `Suppport`;
+        }
+        else if (routeName === 'Result') {
+          labelName = `Result`;
         }
         return <View><Text style={{ alignSelf: 'center', fontSize: 12, color: tintColor, marginBottom: 3, }}>{labelName}</Text></View>;
       },
@@ -149,6 +173,10 @@ export default createAppContainer(
           opac=0;
         } else if (routeName === 'Support') {
           iconName = 'phone';
+          opac=0;
+        }
+        else if (routeName === 'Result') {
+          iconName = 'poll';
           opac=0;
         }
         return <View><MaterialCommunityIcons name={iconName} size={35} color={tintColor} style={{justifyContent:'center',marginTop:5}} active={tintColor} 

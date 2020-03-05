@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableNativeFeedback, ImageBackground, FlatList, RefreshControl } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { ScrollView } from 'react-native-gesture-handler';
-import { ListOfNotifications, ListOfNotificationsPagination } from '../actions/NotificationsActions';
+import { ListOfResult } from '../actions/NotificationsActions';
 import { connect } from 'react-redux';
 import { LoadingOverlay } from "../components/Indicator";
 import { UserLogoutAsync } from '../actions/Login';
@@ -19,7 +19,7 @@ class NotificationScreen extends React.Component {
       'willFocus',
       () => {
         this.props.navigation.setParams({ Save: this.Logout });
-        this.props.ListOfNotifications();
+        this.props.ListOfResult();
       }
     );
   }
@@ -55,49 +55,31 @@ class NotificationScreen extends React.Component {
   
   render() {
     let { refreshing } = this.state;
-    let { notification_list, isLoading, notifications, noticationsLoading } = this.props;
-    console.log(notification_list)
+    let { result_list, isLoading } = this.props;
+    console.log(result_list)
     return (
       <View style={styles.container}>
         <View style={{ alignItems: 'center' }}>
         
-          {notification_list.length != 0 ?
+          {result_list.length != 0 ?
             <FlatList
               showsHorizontalScrollIndicator={false}
               numColumns={1}
-              data={notification_list}
+              data={result_list}
               renderItem={({ item }) =>
-              <TouchableNativeFeedback accessible={false}>
               <View>
               <View style={styles.Card}>
                 <View style={styles.itemcontainer}>
                   <View style={styles.item1}>
-                    <View style={{flexDirection:'row'}}>
-                  <Text style={{fontSize:15,fontWeight:'bold'}}>{item.name}</Text>
-                  <Text style={{marginLeft:'auto',fontSize:12,marginRight:15,fontWeight:'bold'}}>{item.course}</Text>
-                  </View>
-                  <Text style={styles.headline}>{item.email}</Text>
-                    <Text style={styles.headline}>{item.schedule_type}</Text>
-                    <View style={{flexDirection:'row'}}>
-                    <Text style={{ fontSize: 12 }}>Score : {item.score} - </Text>
-                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=0 && item.score<=13?'Mild':null}</Text>
-                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=14 && item.score<=19?'Minimal':null}</Text>
-                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=20 && item.score<=28?'Moderate':null}</Text>
-                  <Text style={{fontSize:12,marginRight:0,fontWeight:'bold'}}>{item.score>=29 && item.score<=63?'Severe':null}</Text>
-                  </View>
-              
-                    <Text style={{ fontSize: 10 }}>{item.start_date}</Text>
+                  <Text style={{fontSize:16,marginRight:15,fontWeight:'bold'}}>{item.schedule_type}</Text>
+                  <Text style={{fontSize:14}}>{item.message}</Text>
+                  {/* <Text style={styles.headline}>{item.email}</Text>
+                    <Text style={styles.headline}>{item.schedule_type}</Text> */}
 
                   </View>
                 </View>
               </View>
-              {item.score>=29 && item.score<=63?
-              <View>
-              <Text style={{ fontSize: 15,color:'red',textAlign:'center',fontWeight:'bold' }}>Need for counseling. Please see your conselour or contact 655-9606`</Text>
               </View>
-              :null}
-              </View>
-            </TouchableNativeFeedback>
               }
               keyExtractor={(item, index) => index.toString()}
               onEndReached={this.LoadMore}
@@ -141,9 +123,9 @@ class NotificationScreen extends React.Component {
   }
 }
 const mapStateToProps = (state) => {
-  return state.notiflist
+  return state.result
 }
-export default connect(mapStateToProps, { ListOfNotifications, UserLogoutAsync, ListOfNotificationsPagination })(NotificationScreen);
+export default connect(mapStateToProps, { ListOfResult, UserLogoutAsync })(NotificationScreen);
 
 
 
