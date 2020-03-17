@@ -238,7 +238,6 @@ export const CreateSchedule = (type, date, from, to,sched) => {
                     .then(async (responseJson) => {
                         console.log(responseJson)
                        if(responseJson.isConfirmed==0){
-                           
                         Alert.alert(
                             "Alert",
                             'Successfully scheduled for '+type,
