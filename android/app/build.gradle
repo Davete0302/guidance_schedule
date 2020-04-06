@@ -181,7 +181,7 @@ android {
 
 dependencies {
      implementation project(':@react-native-community_geolocation')
-     implementation project(':react-native-notifications')
+    //  implementation project(':react-native-notifications')
     implementation project(':react-native-vector-icons')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     // implementation "com.facebook.react:react-native:+"  // From node_modules
@@ -194,8 +194,8 @@ dependencies {
     //  implementation 'com.google.firebase:firebase-analytics:17.2.0'
      implementation 'com.google.android.gms:play-services-base:15.0.0'
      implementation 'com.google.android.gms:play-services-maps:15.0.0'
-      implementation 'com.google.firebase:firebase-messaging:20.1.0'
-      implementation 'com.google.firebase:firebase-auth:19.2.0'
+    //   implementation 'com.google.firebase:firebase-messaging:20.1.0'
+    //   implementation 'com.google.firebase:firebase-auth:19.2.0'
     if (enableHermes) {
         def hermesPath = "../../node_modules/hermes-engine/android/";
         debugImplementation files(hermesPath + "hermes-debug.aar")
