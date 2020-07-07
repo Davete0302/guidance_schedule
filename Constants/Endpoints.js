@@ -1,4 +1,4 @@
-const BASE_URL = 'http://54.254.162.165/api/auth/';
+const BASE_URL = 'http://52.74.70.6/api/auth/';
 // const BASE_URL = 'http://18.136.194.145:81/api/';
 const WEB_URL = 'http://192.168.0.122';
 const WEB_BROADCAST = '3.1.20.199';
